@@ -1,8 +1,9 @@
 from django.shortcuts import render,get_object_or_404
-from rest_framework import generics,authentication, permissions
-
-from .serializers import  ShopSerializer, ConnectionRequestSendSerializer, ProductSerializer, CartSerializer, CartItemsSerializer, ConnectionResponseSerializer, CategorySerializer
-from . models import Shop, Cart, CartItems, Product, Category
+from rest_framework import generics,authentication, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .serializers import  ShopSerializer, ProductSerializer, CartSerializer, CartItemsSerializer, ConnectionResponseSerializer, CategorySerializer, ConnectionSerializer
+from . models import Shop, Cart, CartItems, Product, Category, ShopConnector
 from .permissions import IsShopMerchant, IsShopOwner
 
 
@@ -45,16 +46,10 @@ class RemoveMerchantShop(generics.DestroyAPIView):
     lookup_field = 'pk'
 
 
-class ConnectionRequestSend(generics.CreateAPIView):
-    serializer_class = ConnectionRequestSendSerializer
-    queryset = Shop.objects.filter()
+# class ConnectionRequestSend(generics.CreateAPIView):
+#     serializer_class = ConnectionRequestSendSerializer
+#     queryset = Shop.objects.filter()
 
-
-class ConnectionResponse(generics.CreateAPIView):
-    serializer_class = ConnectionResponseSerializer
-
-    def perform_create(self, serializer):
-        return serializer.save(status="ACCEPT")
 
 
 #This comments are future practice
@@ -128,6 +123,13 @@ class AddCartItems(generics.CreateAPIView):
     authentication_classes = [authentication.TokenAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsShopOwner]
 
+    # def get_queryset(self,**kwargs):
+    #     product = Product.objects.filter()
+    #     CartItems.objects.filter(Product_category=product.catecory)
+    #     return super().get_queryset()
+
+
+
 
 class CartItemsDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = CartItems.objects.filter()
@@ -147,3 +149,65 @@ class CartItemsDetail(generics.RetrieveUpdateDestroyAPIView):
         pk = self.kwargs['pk']
         obj = CartItems.objects.get(pk=pk)
         return obj
+
+
+
+class ConnectionRequestView(generics.ListCreateAPIView):
+    queryset = ShopConnector.objects.all()
+    serializer_class = ConnectionSerializer
+
+    
+
+    # def perform_create(self, serializer):
+    #     sender = Shop.objects.filter(merchant=self.request.user)
+    #     receiver = Shop.objects.filter(merchant=self.request.user).exclude()
+    #     return serializer.save(sender=sender,receiver=receiver)
+
+    # def create(self, request, *args, **kwargs):
+    #     sender = request.user  # Assuming user authentication is implemented
+    #     receiver_id = request.data.get('receiver')  # ID of the user to whom the request is sent
+    #     shop_category = request.data.get('shop_category')
+    #     shop = Shop.objects.filter(merchant=sender)
+
+
+    #     # Check if the sender and receiver have the same shop category
+    #     receiver_shop = get_object_or_404(Shop, category=shop_category, user_id=receiver_id)
+
+    #     # Create the connection request
+    #     connection = Connection(sender=sender, receiver_id=receiver_id, shop_category=shop_category)
+    #     connection.save()
+
+    #     return Response({'status': 'Connection request sent'}, status=status.HTTP_201_CREATED)
+
+
+class ConnectionResponse(generics.CreateAPIView):
+    serializer_class = ConnectionResponseSerializer
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        return serializer.save(status="ACCEPT")
+
+
+class ConnectedShopView(generics.ListAPIView):
+    queryset = ShopConnector.objects.filter()
+    serializer_class = ConnectionSerializer
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self, **kwargs):
+        return ShopConnector.objects.filter(sender_id=self.request.user.id).filter(status="ACCEPT")
+    
+
+class ConnectedShopDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = ShopConnector.objects.filter()
+    serializer_class = ConnectionSerializer
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'pk'
+
+
+    
+
+        
+

@@ -5,8 +5,8 @@ from .models import User, Category, Shop, Product, ShopConnector, Cart, CartItem
 
 admin.site.register(User)
 
-admin.site.register(Product)
-admin.site.register(ShopConnector)
+
+
 
 @admin.register(Shop)
 class ShopAdmin(admin.ModelAdmin):
@@ -23,3 +23,11 @@ class CartAdmin(admin.ModelAdmin):
 @admin.register(CartItems)
 class CartItemsAdmin(admin.ModelAdmin):
     list_display = ['id','cart','product','quantity']
+
+@admin.register(ShopConnector)
+class CartItemsAdmin(admin.ModelAdmin):
+    list_display = ['id','sender','receiver','status']
+
+@admin.register(Product)
+class CartItemsAdmin(admin.ModelAdmin):
+    list_display = ['id','name','price','category','image','shop']

@@ -55,7 +55,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category,on_delete=models.CASCADE)
     image = models.ImageField(upload_to='product_img', null=True, blank=True)
     shop = models.ForeignKey(Shop,on_delete=models.CASCADE)
-    merchant = models.ForeignKey(User, on_delete=models.CASCADE)
+
 
     def __str__(self):
         return self.name
@@ -71,6 +71,12 @@ class ShopConnector(models.Model):
     receiver = models.ForeignKey(Shop, related_name='receiver', on_delete=models.CASCADE)
     status = models.CharField(max_length=200,choices=STATUS, default='')
 
+    @property
+    def connected(self):
+        if self.status == 'ACCEPT':
+            return True
+        return False
+
 
  
 class Cart(models.Model):
@@ -78,8 +84,8 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return self.shop.name
+    # def __str__(self):
+    #     return self.shop.name
 
 
 class CartItems(models.Model):
@@ -88,3 +94,5 @@ class CartItems(models.Model):
     quantity = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
